@@ -64,9 +64,9 @@ public final class HTTPMessageHandler extends MessageHandler {
 				}
 				data.append(line).append("\n");
 			}
-
+			
 			String body = data.toString();
-
+		
 			Response<?> response = (Response<?>) requestDispatcher.dispatch(method, path, body);
 			Gson gson = new Gson();
 
@@ -87,7 +87,8 @@ public final class HTTPMessageHandler extends MessageHandler {
 		String statusLine;
 		String serverHeader = "Server: WebServer\r\n";
 		String contentTypeHeader = "Content-Type: application/json\r\n";
-		try (DataOutputStream out = new DataOutputStream(socket.getOutputStream());) {
+		String connection = "Connection: close\r\n";
+		try (DataOutputStream out = new DataOutputStream(socket.getOutputStream())) {
 
 			statusLine = "HTTP/1.0 " + status.value() + " " + status.getReasonPhrase() + "\r\n";
 			String contentLengthHeader = "Content-Length: " + responseString.length() + "\r\n";
@@ -95,11 +96,13 @@ public final class HTTPMessageHandler extends MessageHandler {
 			out.writeBytes(statusLine);
 			out.writeBytes(serverHeader);
 			out.writeBytes(contentTypeHeader);
+			out.writeBytes(connection);
 			out.writeBytes(contentLengthHeader);
 			out.writeBytes("\r\n");
 			out.writeBytes(responseString);
+			out.writeBytes("\r\n\n");
+			out.flush();
 
-			out.close();
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
